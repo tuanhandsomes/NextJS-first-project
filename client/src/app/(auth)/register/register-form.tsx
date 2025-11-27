@@ -43,7 +43,7 @@ const RegisterForm = () => {
 
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-2 max-w-[600px] flex-shrink-0 w-full"
+                className="space-y-2 max-w-[600px] shrink-0 w-full"
                 noValidate
             >
                 <FormField
