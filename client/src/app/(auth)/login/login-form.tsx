@@ -15,8 +15,10 @@ import { Input } from "@/components/ui/input"
 import { LoginBody, LoginBodyType } from "@/schemaValidations/auth.schema"
 import envConfig from "@/config"
 import { toast } from "sonner"
+import { useAppContext } from "@/app/AppProvider"
 
 const LoginForm = () => {
+    const { setSessionToken } = useAppContext();
     // 1. Define your form.
     const form = useForm<LoginBodyType>({
         resolver: zodResolver(LoginBody),
@@ -47,6 +49,24 @@ const LoginForm = () => {
                 return data
             })
             toast.success(result.payload.message)
+            const resultFromNextServer = await fetch('/api/auth', {
+                method: 'POST',
+                body: JSON.stringify(result),
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            }).then(async (res) => {
+                const payload = await res.json();
+                const data = {
+                    status: res.status,
+                    payload
+                }
+                if (!res.ok) {
+                    throw data;
+                }
+                return data
+            })
+            setSessionToken(resultFromNextServer.payload.data.token);
         } catch (error: any) {
             const errors = error.payload.errors as {
                 field: string
