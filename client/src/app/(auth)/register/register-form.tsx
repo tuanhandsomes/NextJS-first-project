@@ -13,9 +13,13 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { RegisterBody, RegisterBodyType } from "@/schemaValidations/auth.schema"
-import envConfig from "@/config"
+import authApiRequest from "@/apiRequests/auth"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 const RegisterForm = () => {
+
+    const router = useRouter();
     // 1. Define your form.
     const form = useForm<RegisterBodyType>({
         resolver: zodResolver(RegisterBody),
@@ -29,15 +33,31 @@ const RegisterForm = () => {
 
     // 2. Define a submit handler.
     async function onSubmit(values: RegisterBodyType) {
-        const result = await fetch(`${envConfig.NEXT_PUBLIC_API_URL}/auth/register`, {
-            body: JSON.stringify(values),
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            method: 'POST'
-        }).then(res => res.json());
-
-        console.log(result);
+        try {
+            const result = await authApiRequest.register(values)
+            toast.success(result.payload.message)
+            await authApiRequest.auth({ sessionToken: result.payload.data.token })
+            router.push('/me');
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        catch (error: any) {
+            const errors = error.payload.errors as {
+                field: string
+                message: string
+            }[]
+            const status = error.status as number
+            if (status === 422) {
+                errors.forEach((error) => {
+                    form.setError(error.field as 'email' | 'password', {
+                        type: "server",
+                        message: error.message
+                    })
+                })
+            }
+            else {
+                toast.error(error.payload.message)
+            }
+        }
     }
     return (
 
