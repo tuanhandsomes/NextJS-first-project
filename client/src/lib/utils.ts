@@ -26,3 +26,9 @@ export const handleErrorApi = ({ error, setError, duration }: {
     toast.error(error?.payload?.message ?? 'Lỗi không xác định', { duration: duration ?? 5000 })
   }
 }
+/**
+ * Xoá đi ký tự đầu tiên '/' của một chuỗi path nếu có 
+ */
+export const normalizePath = (path: string) => {
+  return path.startsWith('/') ? path.slice(1) : path
+}
